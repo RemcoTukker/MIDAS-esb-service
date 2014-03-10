@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<jbossesb-deployment>
+<!-- hrm is this right? in integerMathService they show something else... -->
+	<jmsQueue>midas_queue</jmsQueue>
+	<jmsQueue>midas_queue_reply</jmsQueue>
+</jbossesb-deployment>
