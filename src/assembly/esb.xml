@@ -1,0 +1,29 @@
+<assembly>
+	<id>with-war</id>
+	<formats>
+		<format>esb</format>
+	</formats>
+	<includeBaseDirectory>false</includeBaseDirectory>
+	<fileSets>
+		<fileSet>
+			<directory>target/classes</directory>
+			<outputDirectory>/</outputDirectory>
+		</fileSet>
+		<fileSet>
+			<directory>target/lib</directory>
+			<outputDirectory>/lib/</outputDirectory>
+		</fileSet>
+	</fileSets>
+	<dependencySets>
+		<dependencySet>
+			<includes>
+				<include>com.almende.eve:esbGateway</include> 
+				<!--  <include>com.almende.eve:MIDASGateway</include>  --> 
+			</includes>
+			<unpack>false</unpack>
+			<outputDirectory>/</outputDirectory>
+			<!-- <outputFileNameMapping> --> 
+			<outputFileNameMapping>MIDASGateway.war</outputFileNameMapping> 
+		</dependencySet>
+	</dependencySets>
+</assembly>
