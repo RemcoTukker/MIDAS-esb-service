@@ -10,6 +10,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.almende.eve.capabilities.handler.SimpleHandler;
+import com.almende.eve.transform.rpc.RpcTransform;
+import com.almende.eve.transform.rpc.RpcTransformFactory;
+import com.almende.eve.transform.rpc.formats.JSONMessage;
+import com.almende.eve.transform.rpc.formats.JSONRequest;
+import com.almende.eve.transform.rpc.formats.JSONResponse;
 import com.almende.eve.transport.Receiver;
 import com.almende.eve.transport.Transport;
 import com.almende.eve.transport.TransportFactory;
@@ -26,10 +31,6 @@ import cz.certicon.arum.core.messaging.exceptions.ARUMMessageDeliveryException;
 import cz.certicon.arum.core.messaging.exceptions.ARUMProtocolException;
 import cz.certicon.arum.core.messaging.exceptions.ARUMUnexpectedMessageProcessingException;
 
-//import org.zeromq.ZMQ;
-//import org.zeromq.ZMQ.Context;
-///import org.zeromq.ZMQ.Socket;
-
 public class HandleRequest {
 
 	private static Logger logger = LoggerFactory.getLogger(HandleRequest.class);
@@ -37,13 +38,9 @@ public class HandleRequest {
 	private static final ScheduledExecutorService worker = 
 			  Executors.newSingleThreadScheduledExecutor();
 
+	private Transport transport;
+	//private RpcTransform rpc = RpcTransformFactory.get(new SimpleHandler<Object>(this));
 	
-	//Context context = ZMQ.context(1);
-    //Socket reqSocket = context.socket(ZMQ.REQ); 
-       // socket for passing on requests.. hrm actually its blocking and a request can take a while to answer..
-    	// either use a pool of req sockets or just use a one-way pattern and wait patiently for a reply
-    	// (we can use the message IDs for that)
-    //Socket repSocket = context.socket(ZMQ.REP);
 	
 	Runnable task = new Runnable() {
 	    public void run() {
@@ -99,10 +96,35 @@ public class HandleRequest {
 		config.setServletUrl("http://localhost:8080/MIDASGateway/agents/");
 		config.setId("gatewayAgent");
 		
-		final Transport transport = TransportFactory.getTransport(config, new SimpleHandler<Receiver>(new Receiver(){
-		
+		//final Transport	transport = TransportFactory.getTransport(config, new SimpleHandler<Receiver>(new Receiver(){
+		transport = TransportFactory.getTransport(config, new SimpleHandler<Receiver>(new Receiver(){
+			
 			@Override
 			public void receive(Object msg, URI senderUrl, String tag) {
+				
+				// incoming message from MIDAS agents
+				JSONMessage incoming = RpcTransform.jsonConvert(msg);
+				
+				// check if we have a reply or a request; 
+				// reply either goes to
+				
+				// TODO; use the stuff for this that is already available from Eve
+				
+				if (incoming instanceof JSONRequest) {
+					
+					// either generate event
+					
+					// or forward request to ARUM service and wait for reply
+					
+				} else if (incoming instanceof JSONResponse) {
+					// we can either keep track of reponses ourselves, or let Eve take care of that
+					// note that we may have to keep track of responses ourselves anyway, for the ARUN-side of affairs
+					
+					
+				}
+				
+				
+				
 				logger.info("Hi there:"+msg +" from:"+ senderUrl);
 			}
 		}));
@@ -120,33 +142,38 @@ public class HandleRequest {
 	 * Remco:
 	 * FIPA_REQUEST => forward request to MIDAS
 	 * FIPA_QUERY => return wsdl. For now, just ignore it...
-	 * Event handling should be done in a separate processing pipeline I suppose..
+	 * 
+	 * Also include a listener for events, and forward them to MIDAS
 	 */
 	
 	@Process
 	public ARUMMessage handleIncomingRequest(ARUMMessage message) {
 		
+		//TODO: see how we can make this an async action
+		
 		logger.debug("got a message! " + message.getContent());
 		System.out.println("system got a message "+ message.getContent());
 				
 		//do something with the message
-		// forward it over the zmq socket
-	/*	reqSocket.send("hrsrs", 0); 
-			logger.debug("sent msg ");
-			System.out.println("sent msg ");
-			String result = new String(reqSocket.recv(0));
-			logger.debug("answer " + result);
-			System.out.println("answer "+ result);
-	*/	
+
+		
+		
+		// forward it over http 
+		
+		// do we even have a blocking wait for response?
+		
+		// send the answer as soon as we got it..
+	
 		ARUMMessage arumResponse = null;
 		ARUMMessagePerformative responsePerformative = ARUMMessagePerformative.INFORM_RESULT;
 		
 		arumResponse = ARUMMessageFactory.createResponseMessage(message, responsePerformative);
-		arumResponse.setContent("ha");
+		arumResponse.setContent("Got it");
 		
 		logger.debug("replying... " + arumResponse.getType());
 		System.out.println("replying... "+ arumResponse.getType());
-				
+			
+		
 		return arumResponse;
 	}
 
